@@ -9,10 +9,16 @@ export default {
   ],
   theme: {
   	extend: {
-		fontFamily: {
-			mono: ["var(--font-geist-mono)", "monospace"],
-			sans: ["var(--font-geist-sans)", "sans-serif"],
-		},
+  		fontFamily: {
+  			mono: [
+  				'var(--font-geist-mono)',
+  				'monospace'
+  			],
+  			sans: [
+  				'var(--font-geist-sans)',
+  				'sans-serif'
+  			]
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
