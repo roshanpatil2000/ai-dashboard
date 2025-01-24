@@ -1,14 +1,13 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 
-import { number, z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -33,16 +32,18 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "../ui/textarea";
 import { Info } from "lucide-react";
+import { generateImageAction } from "@/app/actions/image-actions";
+import useGenetatedStore from "@/store/useGenetatedStore";
 
-const formSchema = z.object({
+export const imageGenerationFormSchema = z.object({
   model: z.string({
     required_error: "model is required",
   }),
   prompt: z.string({
     required_error: "prompt is required",
   }),
-  guidence: z.number({
-    required_error: "guidence scale is required",
+  guidance: z.number({
+    required_error: "guidance scale is required",
   }),
   num_outputs: z
     .number()
@@ -66,7 +67,7 @@ const formSchema = z.object({
     .max(100, {
       message: "output quality should be less than and equals to 100",
     }),
-  num_inference_step: z
+  num_inference_steps: z
     .number()
     .min(1, {
       message: "Number of inference steps should be atleast 1",
@@ -78,24 +79,42 @@ const formSchema = z.object({
 });
 
 const Configuration = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const generateImage = useGenetatedStore((state) => state.generateImage);
+
+  const form = useForm<z.infer<typeof imageGenerationFormSchema>>({
+    resolver: zodResolver(imageGenerationFormSchema),
     defaultValues: {
-      model: "black-forest-labs/flux-schnell",
+      model: "black-forest-labs/flux-dev",
       prompt: "",
-      guidence: 3.5,
+      guidance: 3.5,
       num_outputs: 1,
       output_format: "png",
       aspect_ratio: "1:1",
       output_quality: 80,
-      num_inference_step: 28,
+      num_inference_steps: 28,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  useEffect(() => {
+    const suscription = form.watch((value, { name }) => {
+      if (name === "model") {
+        let newSteps;
+        if (value.model === "black-forest-labs/flux-schnell") {
+          newSteps = 4;
+        } else {
+          newSteps = 28;
+        }
+        if (newSteps !== undefined) {
+          form.setValue("num_inference_steps", newSteps);
+        }
+      }
+
+      return () => suscription.unsubscribe();
+    });
+  }, [form]);
+
+  async function onSubmit(values: z.infer<typeof imageGenerationFormSchema>) {
+    await generateImage(values);
   }
 
   return (
@@ -134,6 +153,7 @@ const Configuration = () => {
                       <SelectItem value="black-forest-labs/flux-dev">
                         Flux Dev
                       </SelectItem>
+
                       <SelectItem value="black-forest-labs/flux-schnell">
                         Flux Schnell
                       </SelectItem>
@@ -209,7 +229,13 @@ const Configuration = () => {
                       </Tooltip>
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} max={4} {...field} />
+                      <Input
+                        type="number"
+                        min={1}
+                        max={4}
+                        {...field}
+                        onChange={(e) => field.onChange(+e.target.value)}
+                      />
                     </FormControl>
 
                     <FormMessage />
@@ -221,20 +247,20 @@ const Configuration = () => {
             {/* row 3 */}
             <FormField
               control={form.control}
-              name="guidence"
+              name="guidance"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
                     <div className="flex items-center justify-between">
                       <div>
-                        Guidence
+                        guidance
                         <Tooltip>
                           <TooltipTrigger>
                             <Info className="w-4 h-4 ml-1" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              Prompt Guidence. Higher values give more creative
+                              Prompt guidance. Higher values give more creative
                               results
                             </p>
                           </TooltipContent>
@@ -260,7 +286,7 @@ const Configuration = () => {
             {/* row 4 */}
             <FormField
               control={form.control}
-              name="num_inference_step"
+              name="num_inference_steps"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -286,7 +312,12 @@ const Configuration = () => {
                     <Slider
                       defaultValue={[field.value]}
                       min={0}
-                      max={50}
+                      max={
+                        form.getValues("model") ===
+                        "black-forest-labs/flux-schnell"
+                          ? 4
+                          : 50
+                      }
                       step={1}
                       onValueChange={(value) => field.onChange(value[0])}
                     />

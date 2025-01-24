@@ -74,14 +74,14 @@ CREATE TABLE
 -- Enable ROW level security
 ALTER TABLE public.generated_images ENABLE ROW LEVEL SECURITY;
 
--- Enable users to view their own data only 
+-- Enable users to view their own data only
 create policy "Enable users to view their own data only"
 on "public"."generated_images"
 for select
 to authenticated
 using ((( SELECT auth.uid() AS uid) = user_id));
 
--- Enable users to insert their own data only 
+-- Enable users to insert their own data only
 create policy "Enable insert for users based on user_id"
 on "public"."generated_images"
 for insert

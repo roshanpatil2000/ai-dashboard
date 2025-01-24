@@ -79,3 +79,9 @@ export async function logout():Promise<void> {
   await supabase.auth.signOut()
   redirect("/login")
 }
+
+
+// reset password need to be implemented....
+
+
+// npx supabase gen types typescript --project-id aljzxymegqtqeooqkstb --schema public > database.types.ts
