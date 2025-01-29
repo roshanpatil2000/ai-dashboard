@@ -133,3 +133,96 @@ export async function storeImages(data: storeImageInput[]) {
     data: { resules: uploadResult },
   };
 }
+
+export async function getImages(limit?: number) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      error: "Unauthorized",
+      success: false,
+      data: null,
+    };
+  }
+  let query = supabase
+    .from("generated_images")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return {
+      error: error.message || "Failed to fetch images",
+      success: false,
+      data: null,
+    };
+  }
+
+  const imageWithUrl = await Promise.all(
+    data.map(
+      async (
+        image: Database["public"]["Tables"]["generated_images"]["Insert"]
+      ) => {
+        const { data } = await supabase.storage
+          .from("generated_images")
+          .createSignedUrl(`${user.id}/${image.image_name}`, 3600);
+        return {
+          ...image,
+          url: data?.signedUrl,
+        };
+      }
+    )
+  );
+
+  return {
+    error: null,
+    success: true,
+    data: imageWithUrl || null,
+  };
+}
+
+export async function deleteImage(id: string, imageName: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      error: "Unauthorized",
+      success: false,
+      data: null,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("generated_images")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    return {
+      error: error.message || "Failed to delete image",
+      success: false,
+      data: null,
+    };
+  }
+  await supabase.storage
+    .from("generated_images")
+    .remove([`${user.id}/${imageName}`]);
+
+  return {
+    error: null,
+    success: true,
+    data: data,
+  };
+}

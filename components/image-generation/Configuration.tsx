@@ -84,14 +84,14 @@ const Configuration = () => {
   const form = useForm<z.infer<typeof imageGenerationFormSchema>>({
     resolver: zodResolver(imageGenerationFormSchema),
     defaultValues: {
-      model: "black-forest-labs/flux-dev",
+      model: "black-forest-labs/flux-schnell",
       prompt: "",
       guidance: 3.5,
       num_outputs: 1,
       output_format: "png",
       aspect_ratio: "1:1",
       output_quality: 80,
-      num_inference_steps: 28,
+      num_inference_steps: 4,
     },
   });
 
@@ -150,12 +150,11 @@ const Configuration = () => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="black-forest-labs/flux-dev">
-                        Flux Dev
-                      </SelectItem>
-
                       <SelectItem value="black-forest-labs/flux-schnell">
                         Flux Schnell
+                      </SelectItem>
+                      <SelectItem value="black-forest-labs/flux-dev">
+                        Flux Dev
                       </SelectItem>
                     </SelectContent>
                   </Select>

@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import Header from "@/components/Header";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,5 +16,9 @@ import {
 } from "@/components/ui/sidebar";
 
 export default function Page() {
-  return <div>Dashboard</div>;
+  return (
+    <section>
+      <Header title="Dashboard" subtitle="Welcome to Pixel AI Dashboard" />
+    </section>
+  );
 }
