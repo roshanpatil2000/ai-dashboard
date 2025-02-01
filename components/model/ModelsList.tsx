@@ -44,7 +44,7 @@ interface ModelsListProps {
 }
 const ModelsList = ({ models }: ModelsListProps) => {
   const toastId = useId();
-  const { data, success, error } = models;
+  const { data } = models;
 
   const handleDeleteModel = async (
     id: number,
